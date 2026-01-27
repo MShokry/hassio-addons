@@ -60,5 +60,14 @@ schema:
   anthropic_api_key: "str?"
   model_provider: "list(anthropic|openai|google|local)"
   model_name: "str"
-  channels: "dict"
-  environment: "dict?"
+  channels:
+    whatsapp:
+      enabled: "bool"
+      allow_from:
+        - "str"
+    telegram:
+      enabled: "bool"
+      bot_token: "str?"
+    discord:
+      enabled: "bool"
+      bot_token: "str?"
