@@ -1,0 +1,80 @@
+---
+description: Version management rule - always keep config.yaml and updater.json versions in sync
+globs: "clawdbot/config.yaml,clawdbot/updater.json"
+alwaysApply: true
+---
+
+# Version Management Rule
+
+## Critical Requirement
+
+**ALWAYS update the version in BOTH files when making any changes:**
+- `clawdbot/config.yaml` - line 3: `version: "X.Y.Z"`
+- `clawdbot/updater.json` - line 2: `"version": "X.Y.Z"`
+
+## Version Sync Rule
+
+1. **Both files MUST have identical version numbers**
+2. **Always increment version when:**
+   - Making code changes to Dockerfile, run.sh, or other addon files
+   - Updating configuration schema
+   - Fixing bugs
+   - Adding features
+   - Changing dependencies
+
+3. **Version Format**: Use semantic versioning (MAJOR.MINOR.PATCH)
+   - Patch (1.0.X): Bug fixes, small changes
+   - Minor (1.X.0): New features, non-breaking changes
+   - Major (X.0.0): Breaking changes
+
+## Files to Update
+
+When updating version, modify ALL of these:
+
+1. `clawdbot/config.yaml`:
+   ```yaml
+   version: "1.0.8"  # Update this line
+   ```
+
+2. `clawdbot/updater.json`:
+   ```json
+   {
+     "version": "1.0.8",  # Update this line
+     "latest_version": "1.0.8",  # Update this line too
+     "release_date": "YYYY-MM-DD"  # Update to current date
+   }
+   ```
+
+3. `clawdbot/CHANGELOG.md`:
+   - Add new version entry with changes
+
+## Checklist Before Committing
+
+- [ ] Version in `config.yaml` matches `updater.json`
+- [ ] `updater.json.latest_version` matches `updater.json.version`
+- [ ] `updater.json.release_date` is updated to today's date
+- [ ] `CHANGELOG.md` has new entry for this version
+- [ ] All version numbers are identical across files
+
+## Example
+
+```yaml
+# config.yaml
+version: "1.0.8"
+```
+
+```json
+// updater.json
+{
+  "version": "1.0.8",
+  "latest_version": "1.0.8",
+  "release_date": "2026-01-27"
+}
+```
+
+```markdown
+# CHANGELOG.md
+## [1.0.8] - 2026-01-27
+### Fixed
+- Fixed bind address format conversion
+```

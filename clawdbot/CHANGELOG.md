@@ -5,6 +5,25 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8] - 2026-01-27
+
+### Fixed
+- Fixed bind address format conversion (0.0.0.0 → "lan", 127.0.0.1 → "loopback")
+- Fixed ClawdBot configuration structure to match current schema:
+  - Moved models to `agents.defaults.model.primary` format
+  - Moved canvasHost to top-level (not under gateway)
+  - Removed deprecated `enabled` fields from channels
+  - Changed Discord `botToken` to `token`
+  - Fixed gateway.auth.token structure
+- Fixed S6 overlay compatibility (init: false)
+- Fixed configuration reading to work without bashio API access
+- Improved error handling and logging
+
+### Changed
+- Updated to use Alpine's nodejs package instead of manual Node.js installation
+- Improved architecture detection with fallback to uname
+- Enhanced configuration validation and type handling
+
 ## [1.0.0] - 2026-01-27
 
 ### Added

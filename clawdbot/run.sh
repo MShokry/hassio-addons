@@ -197,27 +197,37 @@ if [ -f "${OPTIONS_FILE}" ]; then
   fi
 fi
 
+# Convert bind address to ClawdBot format
+# Valid values: "loopback", "lan", "tailnet", "auto", "custom", or IP address
+GATEWAY_BIND="${BIND_ADDRESS}"
+if [ "${BIND_ADDRESS}" = "0.0.0.0" ]; then
+  GATEWAY_BIND="lan"
+elif [ "${BIND_ADDRESS}" = "127.0.0.1" ] || [ "${BIND_ADDRESS}" = "localhost" ]; then
+  GATEWAY_BIND="loopback"
+fi
+
 # Log startup
 log_info "Starting ClawdBot Gateway..."
 log_info "Gateway port: ${GATEWAY_PORT}"
 log_info "Canvas port: ${CANVAS_PORT}"
+log_info "Gateway bind: ${GATEWAY_BIND} (from ${BIND_ADDRESS})"
 log_info "Model provider: ${MODEL_PROVIDER}"
 log_info "Model name: ${MODEL_NAME}"
 
 # Build command arguments
 # Based on official Docker setup: gateway bind defaults to "lan" for container use
-# For Home Assistant, we use the configured bind address
+# For Home Assistant, we convert IP addresses to ClawdBot format
 GATEWAY_ARGS=(
   --port "${GATEWAY_PORT}"
-  --bind "${BIND_ADDRESS}"
+  --bind "${GATEWAY_BIND}"
 )
 
 # Add token if provided (required for non-loopback binds per docs)
 if [ -n "${GATEWAY_TOKEN}" ] && [ "${GATEWAY_TOKEN}" != "" ]; then
   GATEWAY_ARGS+=(--token "${GATEWAY_TOKEN}")
-elif [ "${BIND_ADDRESS}" != "127.0.0.1" ] && [ "${BIND_ADDRESS}" != "localhost" ]; then
+elif [ "${GATEWAY_BIND}" != "loopback" ]; then
   # Token is required for non-loopback binds per documentation
-  log_warning "Gateway token recommended for non-loopback bind address"
+  log_warning "Gateway token recommended for non-loopback bind address (${GATEWAY_BIND})"
 fi
 
 # Start ClawdBot Gateway
