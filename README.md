@@ -14,7 +14,7 @@ ClawdBot is an AI assistant platform that bridges messaging platforms (WhatsApp,
 2. Click the three dots (⋮) in the top right → **Repositories**
 3. Add this repository URL:
    ```
-   https://github.com/mshokry/addon-clawdbot
+   https://github.com/mshokry/hassio-addons
    ```
 4. Click **Add** and wait for the repository to load
 5. Find **ClawdBot** in the add-on store and click **Install**

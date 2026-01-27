@@ -49,101 +49,16 @@ options:
       bot_token: ""
   environment: {}
 schema:
-  log_level:
-    type: select
-    options:
-      - debug
-      - info
-      - warn
-      - error
-    default: info
-    required: true
-  gateway_port:
-    type: integer
-    default: 18789
-    required: true
-  canvas_port:
-    type: integer
-    default: 18793
-    required: true
-  gateway_token:
-    type: string
-    default: ""
-    required: false
-  bind_address:
-    type: string
-    default: "127.0.0.1"
-    required: true
-  homeassistant_url:
-    type: string
-    default: ""
-    required: false
-  homeassistant_token:
-    type: string
-    default: ""
-    required: false
-  openai_api_key:
-    type: string
-    default: ""
-    required: false
-  anthropic_api_key:
-    type: string
-    default: ""
-    required: false
-  model_provider:
-    type: select
-    options:
-      - anthropic
-      - openai
-      - google
-      - local
-    default: anthropic
-    required: true
-  model_name:
-    type: string
-    default: "claude-3-5-sonnet-20241022"
-    required: true
-  channels:
-    type: dict
-    required: true
-    keys:
-      whatsapp:
-        type: dict
-        required: true
-        keys:
-          enabled:
-            type: boolean
-            default: false
-            required: true
-          allow_from:
-            type: list
-            default: []
-            required: false
-      telegram:
-        type: dict
-        required: true
-        keys:
-          enabled:
-            type: boolean
-            default: false
-            required: true
-          bot_token:
-            type: string
-            default: ""
-            required: false
-      discord:
-        type: dict
-        required: true
-        keys:
-          enabled:
-            type: boolean
-            default: false
-            required: true
-          bot_token:
-            type: string
-            default: ""
-            required: false
-  environment:
-    type: dict
-    default: {}
-    required: false
+  log_level: "list(debug|info|warn|error)"
+  gateway_port: "int"
+  canvas_port: "int"
+  gateway_token: "str?"
+  bind_address: "str"
+  homeassistant_url: "str?"
+  homeassistant_token: "str?"
+  openai_api_key: "str?"
+  anthropic_api_key: "str?"
+  model_provider: "list(anthropic|openai|google|local)"
+  model_name: "str"
+  channels: "dict"
+  environment: "dict?"
