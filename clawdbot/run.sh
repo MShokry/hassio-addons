@@ -42,6 +42,19 @@ get_config_int() {
     fi
 }
 
+# Logging functions
+log_info() {
+    echo "[INFO] $@"
+}
+
+log_warning() {
+    echo "[WARN] $@"
+}
+
+log_error() {
+    echo "[ERROR] $@"
+}
+
 # Get configuration from Home Assistant options.json
 LOG_LEVEL=$(get_config 'log_level' 'info')
 GATEWAY_PORT=$(get_config_int 'gateway_port' '18789')
@@ -56,15 +69,15 @@ MODEL_PROVIDER=$(get_config 'model_provider' 'anthropic')
 MODEL_NAME=$(get_config 'model_name' 'claude-3-5-sonnet-20241022')
 
 # Set ClawdBot directories (based on official Docker setup)
-# State directory for agents, sessions, and workspace
+# State directory for agents, sessions, and workspace (persistent data)
 export CLAWDBOT_STATE_DIR=/data
-# Config file path
-export CLAWDBOT_CONFIG_PATH=/data/clawdbot.json
+# Config file path - save to /root/.clawdbot as per ClawdBot conventions
+export CLAWDBOT_CONFIG_PATH=/root/.clawdbot/clawdbot.json
 # Workspace directory (optional, defaults to ~/clawd)
 export CLAWDBOT_WORKSPACE_DIR=/data/workspace
 
 # Create necessary directories
-mkdir -p /data /data/workspace /data/agents /data/sessions
+mkdir -p /root/.clawdbot /data /data/workspace /data/agents /data/sessions
 
 # Get channel configurations
 WHATSAPP_ENABLED=$(get_config_bool 'channels.whatsapp.enabled' 'false')
@@ -131,8 +144,9 @@ CONFIG_JSON=$(jq -n \
     )
   }')
 
-# Write configuration file
-echo "${CONFIG_JSON}" > /data/clawdbot.json
+# Write configuration file to /root/.clawdbot
+echo "${CONFIG_JSON}" > /root/.clawdbot/clawdbot.json
+log_info "Configuration saved to /root/.clawdbot/clawdbot.json"
 
 # Set API keys as environment variables if provided
 if [ -n "${OPENAI_API_KEY}" ] && [ "${OPENAI_API_KEY}" != "" ]; then
@@ -142,19 +156,6 @@ fi
 if [ -n "${ANTHROPIC_API_KEY}" ] && [ "${ANTHROPIC_API_KEY}" != "" ]; then
   export ANTHROPIC_API_KEY
 fi
-
-# Logging functions
-log_info() {
-    echo "[INFO] $@"
-}
-
-log_warning() {
-    echo "[WARN] $@"
-}
-
-log_error() {
-    echo "[ERROR] $@"
-}
 
 # Set Home Assistant integration
 # If URL not provided, use supervisor API

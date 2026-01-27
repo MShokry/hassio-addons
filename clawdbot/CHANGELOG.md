@@ -5,6 +5,14 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.12] - 2026-01-27
+
+### Changed
+- Configuration file now saved to `/root/.clawdbot/clawdbot.json` (matching ClawdBot conventions)
+- Updated `CLAWDBOT_CONFIG_PATH` environment variable to point to `/root/.clawdbot/clawdbot.json`
+- Improved script structure: moved logging functions earlier for better organization
+- Added logging when configuration file is saved
+
 ## [1.0.11] - 2026-01-27
 
 ### Improved
