@@ -1,0 +1,149 @@
+name: ClawdBot
+description: AI assistant gateway for Home Assistant integration with WhatsApp, Telegram, Discord, and more
+version: "1.0.0"
+slug: clawdbot
+url: https://github.com/clawdbot/clawdbot
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+startup: application
+hassio_api: true
+hassio_role: default
+homeassistant_api: true
+host_network: false
+full_access: false
+apparmor: false
+ports:
+  "18789/tcp": 18789
+  "18793/tcp": 18793
+ports_description:
+  "18789/tcp": "Gateway WebSocket port"
+  "18793/tcp": "Canvas HTTP port"
+map:
+  - config:rw
+  - ssl:rw
+  - share:rw
+options:
+  log_level: info
+  gateway_port: 18789
+  canvas_port: 18793
+  gateway_token: ""
+  bind_address: "127.0.0.1"
+  homeassistant_url: ""
+  homeassistant_token: ""
+  openai_api_key: ""
+  anthropic_api_key: ""
+  model_provider: "anthropic"
+  model_name: "claude-3-5-sonnet-20241022"
+  channels:
+    whatsapp:
+      enabled: false
+      allow_from: []
+    telegram:
+      enabled: false
+      bot_token: ""
+    discord:
+      enabled: false
+      bot_token: ""
+  environment: {}
+schema:
+  log_level:
+    type: select
+    options:
+      - debug
+      - info
+      - warn
+      - error
+    default: info
+    required: true
+  gateway_port:
+    type: integer
+    default: 18789
+    required: true
+  canvas_port:
+    type: integer
+    default: 18793
+    required: true
+  gateway_token:
+    type: string
+    default: ""
+    required: false
+  bind_address:
+    type: string
+    default: "127.0.0.1"
+    required: true
+  homeassistant_url:
+    type: string
+    default: ""
+    required: false
+  homeassistant_token:
+    type: string
+    default: ""
+    required: false
+  openai_api_key:
+    type: string
+    default: ""
+    required: false
+  anthropic_api_key:
+    type: string
+    default: ""
+    required: false
+  model_provider:
+    type: select
+    options:
+      - anthropic
+      - openai
+      - google
+      - local
+    default: anthropic
+    required: true
+  model_name:
+    type: string
+    default: "claude-3-5-sonnet-20241022"
+    required: true
+  channels:
+    type: dict
+    required: true
+    keys:
+      whatsapp:
+        type: dict
+        required: true
+        keys:
+          enabled:
+            type: boolean
+            default: false
+            required: true
+          allow_from:
+            type: list
+            default: []
+            required: false
+      telegram:
+        type: dict
+        required: true
+        keys:
+          enabled:
+            type: boolean
+            default: false
+            required: true
+          bot_token:
+            type: string
+            default: ""
+            required: false
+      discord:
+        type: dict
+        required: true
+        keys:
+          enabled:
+            type: boolean
+            default: false
+            required: true
+          bot_token:
+            type: string
+            default: ""
+            required: false
+  environment:
+    type: dict
+    default: {}
+    required: false
