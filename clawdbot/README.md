@@ -38,9 +38,17 @@ All configuration is done through the Home Assistant add-on configuration UI. No
 
 - **Log Level**: Set logging verbosity (debug, info, warn, error)
 - **Gateway Port**: WebSocket port for Gateway (default: 18789)
+  - *Note: If you change this from the default, ingress may not work unless you also modify the add-on's `ingress_port` in its configuration file*
 - **Canvas Port**: HTTP port for Canvas interface (default: 18793)
 - **Bind Address**: Network interface to bind to (default: 0.0.0.0 - binds to all interfaces for container use)
+  - *For ingress to work, this should be `0.0.0.0` (default), not `127.0.0.1`*
 - **Gateway Token**: Optional authentication token for Gateway access
+
+**Port Configuration Notes:**
+- The add-on exposes ports 18789 (Gateway) and 18793 (Canvas) to the host network
+- These ports match the default `gateway_port` and `canvas_port` options
+- When using ingress (recommended), these ports are optional but available for direct access
+- If you change `gateway_port` or `canvas_port`, the exposed ports will still use the default values unless you modify the add-on configuration
 
 ### AI Model Configuration
 
@@ -97,10 +105,12 @@ The add-on supports **Ingress** for secure HTTPS access through Home Assistant's
 - **Via Ingress (Recommended)**: Click the **Open Web UI** button in the add-on panel to access the gateway control UI securely through Home Assistant's HTTPS interface
   - URL: `https://your-home-assistant-url/api/hassio_ingress/clawdbot`
   - No need to expose ports or configure HTTP access
+  - *Note: Ingress uses the default gateway port (18789). If you've changed `gateway_port`, ingress may not work unless you update the add-on's `ingress_port` configuration*
 
 - **Direct Port Access** (if needed):
-  - **WebSocket**: `ws://localhost:18789` (or your configured bind address)
-  - **Canvas UI**: `http://localhost:18793` (or your configured bind address)
+  - **WebSocket**: `ws://localhost:18789` (or your configured bind address and port)
+  - **Canvas UI**: `http://localhost:18793` (or your configured bind address and port)
+  - These ports are exposed to the host network as defined in the add-on configuration
 
 ### Pairing WhatsApp
 
@@ -143,6 +153,15 @@ Example commands (via WhatsApp/Telegram):
 - Verify your API keys are correct
 - Check your API provider account for rate limits or quotas
 - Review logs for specific error messages
+
+### Ingress 503 Service Unavailable
+If you get a "503: Service Unavailable" error when accessing via the "Open Web UI" button:
+- **Check if the add-on is running**: Ensure the add-on is started and running (check the Status tab)
+- **Verify bind address**: The `bind_address` should be set to `0.0.0.0` (default) for ingress to work
+  - If set to `127.0.0.1` or `localhost`, ingress cannot connect to the gateway
+- **Check logs**: Review the add-on logs to ensure the gateway started successfully
+- **Wait for startup**: The gateway may need a few seconds to fully start after clicking "Start"
+- **Restart the add-on**: Try stopping and starting the add-on again
 
 ## Support
 

@@ -52,14 +52,14 @@ RUN \
     && clawdbot --version || echo "ClawdBot installed"
 
 # Create directories
-RUN mkdir -p /data /config
+RUN mkdir -p /root/.clawdbot /config /data
 
 # Copy run script
 COPY run.sh /run.sh
 RUN chmod a+x /run.sh
 
 # Set working directory
-WORKDIR /data
+WORKDIR /root/.clawdbot
 
 # Expose ports
 EXPOSE 18789 18793

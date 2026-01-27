@@ -214,6 +214,13 @@ log_info "Gateway bind: ${GATEWAY_BIND} (from ${BIND_ADDRESS})"
 log_info "Model provider: ${MODEL_PROVIDER}"
 log_info "Model name: ${MODEL_NAME}"
 
+# For ingress to work, the gateway must bind to an address accessible from the container network
+# "lan" binding (from 0.0.0.0) allows ingress proxy to connect
+if [ "${GATEWAY_BIND}" = "loopback" ]; then
+  log_warning "Binding to loopback (127.0.0.1) may prevent ingress from working"
+  log_warning "Consider using bind_address: '0.0.0.0' for ingress support"
+fi
+
 # Build command arguments
 # Based on official Docker setup: gateway bind defaults to "lan" for container use
 # For Home Assistant, we convert IP addresses to ClawdBot format

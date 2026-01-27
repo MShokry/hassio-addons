@@ -5,6 +5,21 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.11] - 2026-01-27
+
+### Improved
+- Added documentation and comments explaining the relationship between `ingress_port`, `gateway_port`, and exposed ports
+- Clarified that `ingress_port` in config.yaml is static and should match the `gateway_port` option
+- Updated port descriptions to indicate they match the corresponding options
+- Enhanced README with port configuration notes and warnings about changing ports
+
+## [1.0.10] - 2026-01-27
+
+### Improved
+- Enhanced logging for ingress connectivity
+- Added warning when binding to loopback address (may prevent ingress)
+- Added troubleshooting section for 503 Service Unavailable errors
+
 ## [1.0.9] - 2026-01-27
 
 ### Added

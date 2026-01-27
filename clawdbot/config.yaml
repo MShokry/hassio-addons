@@ -1,6 +1,6 @@
 name: ClawdBot
 description: AI assistant gateway for Home Assistant integration with WhatsApp, Telegram, Discord, and more
-version: "1.0.9"
+version: "1.0.11"
 slug: clawdbot
 url: https://github.com/clawdbot/clawdbot
 arch:
@@ -17,13 +17,20 @@ host_network: false
 full_access: false
 apparmor: false
 ingress: true
+# Ingress port must match the gateway_port option (default: 18789)
+# If users change gateway_port in options, they should update this value accordingly
+# Note: config.yaml is static, so this cannot be dynamically set from options
 ingress_port: 18789
+# Ports exposed to host network (for direct access, optional when using ingress)
+# These should match gateway_port and canvas_port options for consistency
+# Format: "HOST_PORT/tcp": CONTAINER_PORT
+# If using ingress, these ports are optional but can be used for direct access
 ports:
   "18789/tcp": 18789
   "18793/tcp": 18793
 ports_description:
-  "18789/tcp": "Gateway WebSocket port"
-  "18793/tcp": "Canvas HTTP port"
+  "18789/tcp": "Gateway WebSocket port (matches gateway_port option)"
+  "18793/tcp": "Canvas HTTP port (matches canvas_port option)"
 map:
   - config:rw
   - ssl:rw
