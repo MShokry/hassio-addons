@@ -89,6 +89,8 @@ TELEGRAM_ENABLED_JSON="false"
 DISCORD_ENABLED_JSON="false"
 [ "${DISCORD_ENABLED}" = "true" ] && DISCORD_ENABLED_JSON="true"
 
+# Build ClawdBot configuration JSON (using current format per docs.clawd.bot)
+# Based on: https://docs.clawd.bot/gateway/configuration
 CONFIG_JSON=$(jq -n \
   --argjson gateway_port "${GATEWAY_PORT}" \
   --argjson canvas_port "${CANVAS_PORT}" \
@@ -96,41 +98,37 @@ CONFIG_JSON=$(jq -n \
   --arg gateway_token "${GATEWAY_TOKEN}" \
   --arg model_provider "${MODEL_PROVIDER}" \
   --arg model_name "${MODEL_NAME}" \
-  --argjson whatsapp_enabled "${WHATSAPP_ENABLED_JSON}" \
   --argjson whatsapp_allow_from "${WHATSAPP_ALLOW_FROM}" \
-  --argjson telegram_enabled "${TELEGRAM_ENABLED_JSON}" \
   --arg telegram_token "${TELEGRAM_TOKEN}" \
-  --argjson discord_enabled "${DISCORD_ENABLED_JSON}" \
   --arg discord_token "${DISCORD_TOKEN}" \
+  --argjson whatsapp_enabled "${WHATSAPP_ENABLED_JSON}" \
+  --argjson telegram_enabled "${TELEGRAM_ENABLED_JSON}" \
+  --argjson discord_enabled "${DISCORD_ENABLED_JSON}" \
   '{
     gateway: {
+      mode: "local",
       port: $gateway_port,
-      canvasHost: {
-        port: $canvas_port
-      },
-      bind: $bind_address,
+      bind: (if $bind_address == "0.0.0.0" then "lan" else $bind_address end),
       auth: {
         token: (if $gateway_token == "" then null else $gateway_token end)
       }
     },
-    models: {
-      provider: $model_provider,
-      name: $model_name
+    canvasHost: {
+      port: $canvas_port
     },
-    channels: {
-      whatsapp: {
-        enabled: $whatsapp_enabled,
-        allowFrom: $whatsapp_allow_from
-      },
-      telegram: {
-        enabled: $telegram_enabled,
-        botToken: (if $telegram_token == "" then null else $telegram_token end)
-      },
-      discord: {
-        enabled: $discord_enabled,
-        botToken: (if $discord_token == "" then null else $discord_token end)
+    agents: {
+      defaults: {
+        model: {
+          primary: (if $model_provider != "" and $model_name != "" then ($model_provider + "/" + $model_name) else "anthropic/claude-3-5-sonnet-20241022" end)
+        }
       }
-    }
+    },
+    channels: (
+      {} |
+      (if $whatsapp_enabled == true then . + {whatsapp: {allowFrom: $whatsapp_allow_from}} else . end) |
+      (if $telegram_enabled == true and $telegram_token != "" then . + {telegram: {botToken: $telegram_token}} else . end) |
+      (if $discord_enabled == true and $discord_token != "" then . + {discord: {token: $discord_token}} else . end)
+    )
   }')
 
 # Write configuration file
