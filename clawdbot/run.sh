@@ -109,7 +109,9 @@ CONFIG_JSON=$(jq -n \
         port: $canvas_port
       },
       bind: $bind_address,
-      token: (if $gateway_token == "" then null else $gateway_token end)
+      auth: {
+        token: (if $gateway_token == "" then null else $gateway_token end)
+      }
     },
     models: {
       provider: $model_provider,
