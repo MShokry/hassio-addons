@@ -1,36 +1,59 @@
 #!/usr/bin/env bash
 set -e
 
-# Load bashio if available (for init: false mode)
-if [ -f /usr/lib/bashio/bashio.sh ]; then
-    . /usr/lib/bashio/bashio.sh
-    USE_BASHIO=true
-else
-    USE_BASHIO=false
-fi
+# Options file path
+OPTIONS_FILE="/data/options.json"
 
-# Function to get config value
+# Function to get config value (reads directly from options.json)
 get_config() {
     local key="$1"
-    if [ "$USE_BASHIO" = "true" ] && command -v bashio::config >/dev/null 2>&1; then
-        bashio::config "$key"
+    local default="${2:-}"
+    if [ -f "${OPTIONS_FILE}" ]; then
+        jq -r ".${key} // \"${default}\"" "${OPTIONS_FILE}" 2>/dev/null || echo "${default}"
     else
-        jq -r ".${key} // empty" /data/options.json 2>/dev/null || echo ""
+        echo "${default}"
     fi
 }
 
-# Get configuration from Home Assistant
-LOG_LEVEL=$(get_config 'log_level')
-GATEWAY_PORT=$(get_config 'gateway_port')
-CANVAS_PORT=$(get_config 'canvas_port')
-GATEWAY_TOKEN=$(get_config 'gateway_token')
-BIND_ADDRESS=$(get_config 'bind_address')
-HOMEASSISTANT_URL=$(get_config 'homeassistant_url')
-HOMEASSISTANT_TOKEN=$(get_config 'homeassistant_token')
-OPENAI_API_KEY=$(get_config 'openai_api_key')
-ANTHROPIC_API_KEY=$(get_config 'anthropic_api_key')
-MODEL_PROVIDER=$(get_config 'model_provider')
-MODEL_NAME=$(get_config 'model_name')
+# Function to get boolean config value
+get_config_bool() {
+    local key="$1"
+    local default="${2:-false}"
+    if [ -f "${OPTIONS_FILE}" ]; then
+        local value=$(jq -r ".${key} // ${default}" "${OPTIONS_FILE}" 2>/dev/null)
+        if [ "$value" = "true" ] || [ "$value" = "1" ]; then
+            echo "true"
+        else
+            echo "false"
+        fi
+    else
+        echo "${default}"
+    fi
+}
+
+# Function to get integer config value
+get_config_int() {
+    local key="$1"
+    local default="${2:-0}"
+    if [ -f "${OPTIONS_FILE}" ]; then
+        jq -r ".${key} // ${default}" "${OPTIONS_FILE}" 2>/dev/null || echo "${default}"
+    else
+        echo "${default}"
+    fi
+}
+
+# Get configuration from Home Assistant options.json
+LOG_LEVEL=$(get_config 'log_level' 'info')
+GATEWAY_PORT=$(get_config_int 'gateway_port' '18789')
+CANVAS_PORT=$(get_config_int 'canvas_port' '18793')
+GATEWAY_TOKEN=$(get_config 'gateway_token' '')
+BIND_ADDRESS=$(get_config 'bind_address' '0.0.0.0')
+HOMEASSISTANT_URL=$(get_config 'homeassistant_url' '')
+HOMEASSISTANT_TOKEN=$(get_config 'homeassistant_token' '')
+OPENAI_API_KEY=$(get_config 'openai_api_key' '')
+ANTHROPIC_API_KEY=$(get_config 'anthropic_api_key' '')
+MODEL_PROVIDER=$(get_config 'model_provider' 'anthropic')
+MODEL_NAME=$(get_config 'model_name' 'claude-3-5-sonnet-20241022')
 
 # Set ClawdBot directories (based on official Docker setup)
 # State directory for agents, sessions, and workspace
@@ -44,20 +67,28 @@ export CLAWDBOT_WORKSPACE_DIR=/data/workspace
 mkdir -p /data /data/workspace /data/agents /data/sessions
 
 # Get channel configurations
-WHATSAPP_ENABLED=$(get_config 'channels.whatsapp.enabled')
-TELEGRAM_ENABLED=$(get_config 'channels.telegram.enabled')
-TELEGRAM_TOKEN=$(get_config 'channels.telegram.bot_token')
-DISCORD_ENABLED=$(get_config 'channels.discord.enabled')
-DISCORD_TOKEN=$(get_config 'channels.discord.bot_token')
+WHATSAPP_ENABLED=$(get_config_bool 'channels.whatsapp.enabled' 'false')
+TELEGRAM_ENABLED=$(get_config_bool 'channels.telegram.enabled' 'false')
+TELEGRAM_TOKEN=$(get_config 'channels.telegram.bot_token' '')
+DISCORD_ENABLED=$(get_config_bool 'channels.discord.enabled' 'false')
+DISCORD_TOKEN=$(get_config 'channels.discord.bot_token' '')
 
 # Get allow_from list for WhatsApp using jq
-if [ -f "/data/options.json" ]; then
-  WHATSAPP_ALLOW_FROM=$(jq -r '.channels.whatsapp.allow_from // []' /data/options.json)
+if [ -f "${OPTIONS_FILE}" ]; then
+  WHATSAPP_ALLOW_FROM=$(jq -c '.channels.whatsapp.allow_from // []' "${OPTIONS_FILE}" 2>/dev/null || echo "[]")
 else
   WHATSAPP_ALLOW_FROM="[]"
 fi
 
 # Build ClawdBot configuration JSON
+# Convert boolean strings to actual booleans for jq
+WHATSAPP_ENABLED_JSON="false"
+[ "${WHATSAPP_ENABLED}" = "true" ] && WHATSAPP_ENABLED_JSON="true"
+TELEGRAM_ENABLED_JSON="false"
+[ "${TELEGRAM_ENABLED}" = "true" ] && TELEGRAM_ENABLED_JSON="true"
+DISCORD_ENABLED_JSON="false"
+[ "${DISCORD_ENABLED}" = "true" ] && DISCORD_ENABLED_JSON="true"
+
 CONFIG_JSON=$(jq -n \
   --argjson gateway_port "${GATEWAY_PORT}" \
   --argjson canvas_port "${CANVAS_PORT}" \
@@ -65,11 +96,11 @@ CONFIG_JSON=$(jq -n \
   --arg gateway_token "${GATEWAY_TOKEN}" \
   --arg model_provider "${MODEL_PROVIDER}" \
   --arg model_name "${MODEL_NAME}" \
-  --argjson whatsapp_enabled "${WHATSAPP_ENABLED}" \
+  --argjson whatsapp_enabled "${WHATSAPP_ENABLED_JSON}" \
   --argjson whatsapp_allow_from "${WHATSAPP_ALLOW_FROM}" \
-  --argjson telegram_enabled "${TELEGRAM_ENABLED}" \
+  --argjson telegram_enabled "${TELEGRAM_ENABLED_JSON}" \
   --arg telegram_token "${TELEGRAM_TOKEN}" \
-  --argjson discord_enabled "${DISCORD_ENABLED}" \
+  --argjson discord_enabled "${DISCORD_ENABLED_JSON}" \
   --arg discord_token "${DISCORD_TOKEN}" \
   '{
     gateway: {
@@ -112,21 +143,17 @@ if [ -n "${ANTHROPIC_API_KEY}" ] && [ "${ANTHROPIC_API_KEY}" != "" ]; then
   export ANTHROPIC_API_KEY
 fi
 
-# Logging function
+# Logging functions
 log_info() {
-    if [ "$USE_BASHIO" = "true" ] && command -v bashio::log.info >/dev/null 2>&1; then
-        bashio::log.info "$@"
-    else
-        echo "[INFO] $@"
-    fi
+    echo "[INFO] $@"
 }
 
 log_warning() {
-    if [ "$USE_BASHIO" = "true" ] && command -v bashio::log.warning >/dev/null 2>&1; then
-        bashio::log.warning "$@"
-    else
-        echo "[WARN] $@"
-    fi
+    echo "[WARN] $@"
+}
+
+log_error() {
+    echo "[ERROR] $@"
 }
 
 # Set Home Assistant integration
@@ -136,14 +163,11 @@ if [ -z "${HOMEASSISTANT_URL}" ] || [ "${HOMEASSISTANT_URL}" == "" ]; then
   log_info "Using default Home Assistant URL: ${HOMEASSISTANT_URL}"
 fi
 
-# If token not provided, try to get it from supervisor (only if bashio available)
+# If token not provided, try to get it from supervisor ingress token
+# Note: With init: false, we can't access supervisor API directly
+# Users should set the token in the addon configuration
 if [ -z "${HOMEASSISTANT_TOKEN}" ] || [ "${HOMEASSISTANT_TOKEN}" == "" ]; then
-  if [ "$USE_BASHIO" = "true" ] && command -v bashio::addon.ingress_token >/dev/null 2>&1; then
-    if bashio::var.has_value "$(bashio::addon.ingress_token)"; then
-      HOMEASSISTANT_TOKEN=$(bashio::addon.ingress_token)
-      log_info "Using supervisor ingress token for Home Assistant"
-    fi
-  fi
+  log_info "Home Assistant token not provided - integration may be limited"
 fi
 
 # Export Home Assistant variables if available
@@ -161,12 +185,16 @@ fi
 export LOG_LEVEL=${LOG_LEVEL}
 
 # Add any additional environment variables
-ENV_VARS=$(get_config 'environment')
-if [ -n "${ENV_VARS}" ] && [ "${ENV_VARS}" != "null" ] && [ "${ENV_VARS}" != "{}" ]; then
-  for key in $(echo "${ENV_VARS}" | jq -r 'keys[]' 2>/dev/null); do
-    value=$(echo "${ENV_VARS}" | jq -r ".[\"$key\"]" 2>/dev/null)
-    export "${key}=${value}"
-  done
+if [ -f "${OPTIONS_FILE}" ]; then
+  ENV_VARS=$(jq -c '.environment // {}' "${OPTIONS_FILE}" 2>/dev/null || echo "{}")
+  if [ -n "${ENV_VARS}" ] && [ "${ENV_VARS}" != "null" ] && [ "${ENV_VARS}" != "{}" ]; then
+    for key in $(echo "${ENV_VARS}" | jq -r 'keys[]' 2>/dev/null); do
+      value=$(echo "${ENV_VARS}" | jq -r ".[\"$key\"]" 2>/dev/null)
+      if [ -n "${value}" ] && [ "${value}" != "null" ]; then
+        export "${key}=${value}"
+      fi
+    done
+  fi
 fi
 
 # Log startup
