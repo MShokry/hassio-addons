@@ -1,18 +1,36 @@
-#!/usr/bin/with-contenv bashio
+#!/usr/bin/env bash
 set -e
 
+# Load bashio if available (for init: false mode)
+if [ -f /usr/lib/bashio/bashio.sh ]; then
+    . /usr/lib/bashio/bashio.sh
+    USE_BASHIO=true
+else
+    USE_BASHIO=false
+fi
+
+# Function to get config value
+get_config() {
+    local key="$1"
+    if [ "$USE_BASHIO" = "true" ] && command -v bashio::config >/dev/null 2>&1; then
+        bashio::config "$key"
+    else
+        jq -r ".${key} // empty" /data/options.json 2>/dev/null || echo ""
+    fi
+}
+
 # Get configuration from Home Assistant
-LOG_LEVEL=$(bashio::config 'log_level')
-GATEWAY_PORT=$(bashio::config 'gateway_port')
-CANVAS_PORT=$(bashio::config 'canvas_port')
-GATEWAY_TOKEN=$(bashio::config 'gateway_token')
-BIND_ADDRESS=$(bashio::config 'bind_address')
-HOMEASSISTANT_URL=$(bashio::config 'homeassistant_url')
-HOMEASSISTANT_TOKEN=$(bashio::config 'homeassistant_token')
-OPENAI_API_KEY=$(bashio::config 'openai_api_key')
-ANTHROPIC_API_KEY=$(bashio::config 'anthropic_api_key')
-MODEL_PROVIDER=$(bashio::config 'model_provider')
-MODEL_NAME=$(bashio::config 'model_name')
+LOG_LEVEL=$(get_config 'log_level')
+GATEWAY_PORT=$(get_config 'gateway_port')
+CANVAS_PORT=$(get_config 'canvas_port')
+GATEWAY_TOKEN=$(get_config 'gateway_token')
+BIND_ADDRESS=$(get_config 'bind_address')
+HOMEASSISTANT_URL=$(get_config 'homeassistant_url')
+HOMEASSISTANT_TOKEN=$(get_config 'homeassistant_token')
+OPENAI_API_KEY=$(get_config 'openai_api_key')
+ANTHROPIC_API_KEY=$(get_config 'anthropic_api_key')
+MODEL_PROVIDER=$(get_config 'model_provider')
+MODEL_NAME=$(get_config 'model_name')
 
 # Set ClawdBot directories (based on official Docker setup)
 # State directory for agents, sessions, and workspace
@@ -26,14 +44,14 @@ export CLAWDBOT_WORKSPACE_DIR=/data/workspace
 mkdir -p /data /data/workspace /data/agents /data/sessions
 
 # Get channel configurations
-WHATSAPP_ENABLED=$(bashio::config 'channels.whatsapp.enabled')
-TELEGRAM_ENABLED=$(bashio::config 'channels.telegram.enabled')
-TELEGRAM_TOKEN=$(bashio::config 'channels.telegram.bot_token')
-DISCORD_ENABLED=$(bashio::config 'channels.discord.enabled')
-DISCORD_TOKEN=$(bashio::config 'channels.discord.bot_token')
+WHATSAPP_ENABLED=$(get_config 'channels.whatsapp.enabled')
+TELEGRAM_ENABLED=$(get_config 'channels.telegram.enabled')
+TELEGRAM_TOKEN=$(get_config 'channels.telegram.bot_token')
+DISCORD_ENABLED=$(get_config 'channels.discord.enabled')
+DISCORD_TOKEN=$(get_config 'channels.discord.bot_token')
 
 # Get allow_from list for WhatsApp using jq
-if bashio::fs.file_exists "/data/options.json"; then
+if [ -f "/data/options.json" ]; then
   WHATSAPP_ALLOW_FROM=$(jq -r '.channels.whatsapp.allow_from // []' /data/options.json)
 else
   WHATSAPP_ALLOW_FROM="[]"
@@ -94,18 +112,37 @@ if [ -n "${ANTHROPIC_API_KEY}" ] && [ "${ANTHROPIC_API_KEY}" != "" ]; then
   export ANTHROPIC_API_KEY
 fi
 
+# Logging function
+log_info() {
+    if [ "$USE_BASHIO" = "true" ] && command -v bashio::log.info >/dev/null 2>&1; then
+        bashio::log.info "$@"
+    else
+        echo "[INFO] $@"
+    fi
+}
+
+log_warning() {
+    if [ "$USE_BASHIO" = "true" ] && command -v bashio::log.warning >/dev/null 2>&1; then
+        bashio::log.warning "$@"
+    else
+        echo "[WARN] $@"
+    fi
+}
+
 # Set Home Assistant integration
 # If URL not provided, use supervisor API
 if [ -z "${HOMEASSISTANT_URL}" ] || [ "${HOMEASSISTANT_URL}" == "" ]; then
   HOMEASSISTANT_URL="http://supervisor/core"
-  bashio::log.info "Using default Home Assistant URL: ${HOMEASSISTANT_URL}"
+  log_info "Using default Home Assistant URL: ${HOMEASSISTANT_URL}"
 fi
 
-# If token not provided, try to get it from supervisor
+# If token not provided, try to get it from supervisor (only if bashio available)
 if [ -z "${HOMEASSISTANT_TOKEN}" ] || [ "${HOMEASSISTANT_TOKEN}" == "" ]; then
-  if bashio::var.has_value "$(bashio::addon.ingress_token)"; then
-    HOMEASSISTANT_TOKEN=$(bashio::addon.ingress_token)
-    bashio::log.info "Using supervisor ingress token for Home Assistant"
+  if [ "$USE_BASHIO" = "true" ] && command -v bashio::addon.ingress_token >/dev/null 2>&1; then
+    if bashio::var.has_value "$(bashio::addon.ingress_token)"; then
+      HOMEASSISTANT_TOKEN=$(bashio::addon.ingress_token)
+      log_info "Using supervisor ingress token for Home Assistant"
+    fi
   fi
 fi
 
@@ -114,9 +151,9 @@ if [ -n "${HOMEASSISTANT_URL}" ] && [ "${HOMEASSISTANT_URL}" != "" ]; then
   export HOMEASSISTANT_URL
   if [ -n "${HOMEASSISTANT_TOKEN}" ] && [ "${HOMEASSISTANT_TOKEN}" != "" ]; then
     export HOMEASSISTANT_TOKEN
-    bashio::log.info "Home Assistant integration enabled: ${HOMEASSISTANT_URL}"
+    log_info "Home Assistant integration enabled: ${HOMEASSISTANT_URL}"
   else
-    bashio::log.warning "Home Assistant URL set but no token provided"
+    log_warning "Home Assistant URL set but no token provided"
   fi
 fi
 
@@ -124,20 +161,20 @@ fi
 export LOG_LEVEL=${LOG_LEVEL}
 
 # Add any additional environment variables
-ENV_VARS=$(bashio::config 'environment')
-if [ -n "${ENV_VARS}" ] && [ "${ENV_VARS}" != "null" ]; then
-  for key in $(echo "${ENV_VARS}" | jq -r 'keys[]'); do
-    value=$(echo "${ENV_VARS}" | jq -r ".[\"$key\"]")
+ENV_VARS=$(get_config 'environment')
+if [ -n "${ENV_VARS}" ] && [ "${ENV_VARS}" != "null" ] && [ "${ENV_VARS}" != "{}" ]; then
+  for key in $(echo "${ENV_VARS}" | jq -r 'keys[]' 2>/dev/null); do
+    value=$(echo "${ENV_VARS}" | jq -r ".[\"$key\"]" 2>/dev/null)
     export "${key}=${value}"
   done
 fi
 
 # Log startup
-bashio::log.info "Starting ClawdBot Gateway..."
-bashio::log.info "Gateway port: ${GATEWAY_PORT}"
-bashio::log.info "Canvas port: ${CANVAS_PORT}"
-bashio::log.info "Model provider: ${MODEL_PROVIDER}"
-bashio::log.info "Model name: ${MODEL_NAME}"
+log_info "Starting ClawdBot Gateway..."
+log_info "Gateway port: ${GATEWAY_PORT}"
+log_info "Canvas port: ${CANVAS_PORT}"
+log_info "Model provider: ${MODEL_PROVIDER}"
+log_info "Model name: ${MODEL_NAME}"
 
 # Build command arguments
 # Based on official Docker setup: gateway bind defaults to "lan" for container use
@@ -152,7 +189,7 @@ if [ -n "${GATEWAY_TOKEN}" ] && [ "${GATEWAY_TOKEN}" != "" ]; then
   GATEWAY_ARGS+=(--token "${GATEWAY_TOKEN}")
 elif [ "${BIND_ADDRESS}" != "127.0.0.1" ] && [ "${BIND_ADDRESS}" != "localhost" ]; then
   # Token is required for non-loopback binds per documentation
-  bashio::log.warning "Gateway token recommended for non-loopback bind address"
+  log_warning "Gateway token recommended for non-loopback bind address"
 fi
 
 # Start ClawdBot Gateway
