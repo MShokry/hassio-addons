@@ -1,0 +1,26 @@
+{
+  "version": "1.0.5",
+  "release_date": "2026-01-27",
+  "release_notes": "ClawdBot Home Assistant Add-on - AI assistant gateway with WhatsApp, Telegram, Discord, and Home Assistant integration",
+  "changelog": "https://github.com/mshokry/hassio-addons/blob/main/clawdbot/CHANGELOG.md",
+  "repository": "https://github.com/mshokry/hassio-addons",
+  "addon_url": "https://github.com/mshokry/hassio-addons/tree/main/clawdbot",
+  "update_available": false,
+  "latest_version": "1.0.5",
+  "features": [
+    "AI Agent Integration - Connect to Claude, GPT-4, Gemini, and other AI models",
+    "Multi-Platform Support - WhatsApp, Telegram, Discord, and more",
+    "Home Assistant Integration - Control your smart home through chat",
+    "Secure Configuration - All settings managed through Home Assistant UI",
+    "WebSocket Gateway - Real-time communication and control",
+    "Canvas Interface - Visual workspace for AI interactions"
+  ],
+  "supported_architectures": [
+    "aarch64",
+    "amd64",
+    "armhf",
+    "armv7"
+  ],
+  "maintainer": "Mahmoud Shokry <eng.m.shokry@gmail.com>",
+  "documentation": "https://github.com/mshokry/hassio-addons/blob/main/clawdbot/README.md"
+}
