@@ -19,7 +19,7 @@ ClawdBot is an AI assistant platform that bridges messaging platforms (WhatsApp,
 
 1. Add this repository to your Home Assistant add-on store:
    ```
-   https://github.com/YOUR_USERNAME/addon-clawdbot
+   https://github.com/mshokry/hassio-addons
    ```
 
 2. Go to **Settings** → **Add-ons** → **Add-on Store**
