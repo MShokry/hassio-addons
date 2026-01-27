@@ -39,7 +39,7 @@ All configuration is done through the Home Assistant add-on configuration UI. No
 - **Log Level**: Set logging verbosity (debug, info, warn, error)
 - **Gateway Port**: WebSocket port for Gateway (default: 18789)
 - **Canvas Port**: HTTP port for Canvas interface (default: 18793)
-- **Bind Address**: Network interface to bind to (default: 127.0.0.1)
+- **Bind Address**: Network interface to bind to (default: 0.0.0.0 - binds to all interfaces for container use)
 - **Gateway Token**: Optional authentication token for Gateway access
 
 ### AI Model Configuration

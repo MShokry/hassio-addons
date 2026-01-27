@@ -14,12 +14,16 @@ ANTHROPIC_API_KEY=$(bashio::config 'anthropic_api_key')
 MODEL_PROVIDER=$(bashio::config 'model_provider')
 MODEL_NAME=$(bashio::config 'model_name')
 
-# Set ClawdBot data directory
+# Set ClawdBot directories (based on official Docker setup)
+# State directory for agents, sessions, and workspace
 export CLAWDBOT_STATE_DIR=/data
+# Config file path
 export CLAWDBOT_CONFIG_PATH=/data/clawdbot.json
+# Workspace directory (optional, defaults to ~/clawd)
+export CLAWDBOT_WORKSPACE_DIR=/data/workspace
 
-# Create config directory if it doesn't exist
-mkdir -p /data
+# Create necessary directories
+mkdir -p /data /data/workspace /data/agents /data/sessions
 
 # Get channel configurations
 WHATSAPP_ENABLED=$(bashio::config 'channels.whatsapp.enabled')
@@ -136,15 +140,21 @@ bashio::log.info "Model provider: ${MODEL_PROVIDER}"
 bashio::log.info "Model name: ${MODEL_NAME}"
 
 # Build command arguments
+# Based on official Docker setup: gateway bind defaults to "lan" for container use
+# For Home Assistant, we use the configured bind address
 GATEWAY_ARGS=(
   --port "${GATEWAY_PORT}"
   --bind "${BIND_ADDRESS}"
 )
 
-# Add token if provided
+# Add token if provided (required for non-loopback binds per docs)
 if [ -n "${GATEWAY_TOKEN}" ] && [ "${GATEWAY_TOKEN}" != "" ]; then
   GATEWAY_ARGS+=(--token "${GATEWAY_TOKEN}")
+elif [ "${BIND_ADDRESS}" != "127.0.0.1" ] && [ "${BIND_ADDRESS}" != "localhost" ]; then
+  # Token is required for non-loopback binds per documentation
+  bashio::log.warning "Gateway token recommended for non-loopback bind address"
 fi
 
 # Start ClawdBot Gateway
+# Reference: https://docs.molt.bot/install/docker
 exec clawdbot gateway "${GATEWAY_ARGS[@]}"
