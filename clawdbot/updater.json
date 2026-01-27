@@ -1,5 +1,5 @@
 {
-  "version": "1.0.5",
+  "version": "1.0.7",
   "release_date": "2026-01-27",
   "release_notes": "ClawdBot Home Assistant Add-on - AI assistant gateway with WhatsApp, Telegram, Discord, and Home Assistant integration",
   "changelog": "https://github.com/mshokry/hassio-addons/blob/main/clawdbot/CHANGELOG.md",
