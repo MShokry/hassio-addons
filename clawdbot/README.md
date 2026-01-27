@@ -92,9 +92,15 @@ Add custom environment variables as a dictionary (key-value pairs) for advanced 
 
 ### Accessing the Gateway
 
-Once running, the Gateway is available at:
-- **WebSocket**: `ws://localhost:18789` (or your configured bind address)
-- **Canvas UI**: `http://localhost:18793` (or your configured bind address)
+The add-on supports **Ingress** for secure HTTPS access through Home Assistant's web interface:
+
+- **Via Ingress (Recommended)**: Click the **Open Web UI** button in the add-on panel to access the gateway control UI securely through Home Assistant's HTTPS interface
+  - URL: `https://your-home-assistant-url/api/hassio_ingress/clawdbot`
+  - No need to expose ports or configure HTTP access
+
+- **Direct Port Access** (if needed):
+  - **WebSocket**: `ws://localhost:18789` (or your configured bind address)
+  - **Canvas UI**: `http://localhost:18793` (or your configured bind address)
 
 ### Pairing WhatsApp
 

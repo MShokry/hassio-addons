@@ -1,6 +1,6 @@
 name: ClawdBot
 description: AI assistant gateway for Home Assistant integration with WhatsApp, Telegram, Discord, and more
-version: "1.0.8"
+version: "1.0.9"
 slug: clawdbot
 url: https://github.com/clawdbot/clawdbot
 arch:
@@ -16,6 +16,8 @@ homeassistant_api: true
 host_network: false
 full_access: false
 apparmor: false
+ingress: true
+ingress_port: 18789
 ports:
   "18789/tcp": 18789
   "18793/tcp": 18793

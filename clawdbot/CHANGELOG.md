@@ -5,6 +5,14 @@ All notable changes to this add-on will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.9] - 2026-01-27
+
+### Added
+- **Ingress support**: Added ingress configuration to enable secure HTTPS access through Home Assistant's web interface
+  - "Open Web UI" button now available in the add-on panel
+  - Access the gateway control UI securely via HTTPS without exposing ports
+  - Fully integrated with Home Assistant's authentication system
+
 ## [1.0.8] - 2026-01-27
 
 ### Fixed
