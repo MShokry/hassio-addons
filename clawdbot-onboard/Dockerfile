@@ -33,7 +33,12 @@ RUN \
     && clawdbot --version || echo "ClawdBot installed"
 
 # Create directories
-RUN mkdir -p /root/.clawdbot /config /data
+RUN mkdir -p /root/.clawdbot /config /data /data/workspace /data/clawdbot-config
+
+# Persist state/config/workspace by default for exec sessions
+ENV CLAWDBOT_STATE_DIR=/data \
+    CLAWDBOT_CONFIG_PATH=/data/clawdbot-config/clawdbot.json \
+    CLAWDBOT_WORKSPACE_DIR=/data/workspace
 
 # Copy run script
 COPY run.sh /run.sh
