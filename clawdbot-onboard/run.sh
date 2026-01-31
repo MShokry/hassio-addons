@@ -81,24 +81,10 @@ elif [ ! -f "${DEFAULT_CONFIG_PATH}" ] && [ ! -f "${CONFIG_PATH}" ]; then
 fi
 
 if [ "${NEED_ONBOARD}" = "true" ]; then
-  if [ "${ONBOARDING_UI}" = "true" ]; then
-    log_info "Starting interactive onboarding UI on Canvas port ${CANVAS_PORT}..."
-    log_info "Open the add-on's Web UI in Home Assistant to continue."
-    # Run onboarding UI in the foreground so HA Ingress can proxy to it
-    exec clawdbot onboard
-  else
-    log_info "Starting non-interactive onboarding..."
-    if clawdbot onboard --non-interactive; then
-      log_info "Onboarding completed. Persisting generated config."
-      if [ -f "${DEFAULT_CONFIG_PATH}" ]; then
-        mkdir -p "${CONFIG_DIR}"
-        cp -f "${DEFAULT_CONFIG_PATH}" "${CONFIG_PATH}" || true
-      fi
-    else
-      log_error "Onboarding failed. Check logs above for details."
-      exit 1
-    fi
-  fi
+  log_info "No config found. Idling without starting onboarding."
+  log_info "To run onboarding manually, exec into the container and run: clawdbot onboard"
+  # Keep container running without starting onboarding
+  tail -f /dev/null
 fi
 
 log_info "Starting ClawdBot Gateway..."

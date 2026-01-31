@@ -1,6 +1,6 @@
 name: ClawdBot Onboard
 description: Self-configuring ClawdBot add-on that launches onboarding UI in Home Assistant
-version: "1.0.1"
+version: "1.0.2"
 slug: clawdbot_onboard
 url: https://github.com/clawdbot/clawdbot
 arch:
