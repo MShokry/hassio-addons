@@ -1,6 +1,6 @@
 name: ClawdBot Onboard
 description: Self-configuring ClawdBot add-on that launches onboarding UI in Home Assistant
-version: "1.0.2"
+version: "1.0.3"
 slug: clawdbot_onboard
 url: https://github.com/clawdbot/clawdbot
 arch:
@@ -18,7 +18,7 @@ full_access: false
 apparmor: false
 ingress: true
 # Onboarding UI is served via the Canvas port
-ingress_port: 18793
+ingress_port: 18789
 ports:
   "18789/tcp": 18789
   "18793/tcp": 18793
