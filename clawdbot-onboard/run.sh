@@ -49,6 +49,7 @@ GATEWAY_PORT=$(get_config_int 'gateway_port' '18789')
 CANVAS_PORT=$(get_config_int 'canvas_port' '18793')
 BIND_ADDRESS=$(get_config 'bind_address' '0.0.0.0')
 FORCE_ONBOARD=$(get_config_bool 'force_onboard' 'false')
+ONBOARDING_UI=$(get_config_bool 'onboarding_ui' 'true')
 
 # Directories for state and persistent config
 export CLAWDBOT_STATE_DIR=/data
@@ -80,28 +81,38 @@ elif [ ! -f "${DEFAULT_CONFIG_PATH}" ] && [ ! -f "${CONFIG_PATH}" ]; then
 fi
 
 if [ "${NEED_ONBOARD}" = "true" ]; then
-  log_info "No config found or force_onboard=true. Starting ClawdBot Onboarding UI..."
-  log_info "Canvas (onboarding) port: ${CANVAS_PORT}"
-  log_info "After completing onboarding, a config will be saved and persisted."
-  
-  # Start onboarding experience
-  # If the CLI supports --port options for Canvas, it will honor env/args; otherwise defaults
-  # We run onboarding in the foreground so HA Ingress can proxy to it.
-  exec clawdbot onboard
-else
-  log_info "Config found. Starting ClawdBot Gateway..."
-  log_info "Gateway port: ${GATEWAY_PORT} | Bind: ${GATEWAY_BIND}"
-  
-  # Persist any config written to default path back to /data
-  if [ -f "${DEFAULT_CONFIG_PATH}" ]; then
-    mkdir -p "${CONFIG_DIR}"
-    cp -f "${DEFAULT_CONFIG_PATH}" "${CONFIG_PATH}" || true
+  if [ "${ONBOARDING_UI}" = "true" ]; then
+    log_info "Starting interactive onboarding UI on Canvas port ${CANVAS_PORT}..."
+    log_info "Open the add-on's Web UI in Home Assistant to continue."
+    # Run onboarding UI in the foreground so HA Ingress can proxy to it
+    exec clawdbot onboard
+  else
+    log_info "Starting non-interactive onboarding..."
+    if clawdbot onboard --non-interactive; then
+      log_info "Onboarding completed. Persisting generated config."
+      if [ -f "${DEFAULT_CONFIG_PATH}" ]; then
+        mkdir -p "${CONFIG_DIR}"
+        cp -f "${DEFAULT_CONFIG_PATH}" "${CONFIG_PATH}" || true
+      fi
+    else
+      log_error "Onboarding failed. Check logs above for details."
+      exit 1
+    fi
   fi
-
-  GATEWAY_ARGS=(
-    --port "${GATEWAY_PORT}"
-    --bind "${GATEWAY_BIND}"
-  )
-
-  exec clawdbot gateway "${GATEWAY_ARGS[@]}"
 fi
+
+log_info "Starting ClawdBot Gateway..."
+log_info "Gateway port: ${GATEWAY_PORT} | Bind: ${GATEWAY_BIND}"
+
+# Ensure any config from default path is persisted
+if [ -f "${DEFAULT_CONFIG_PATH}" ]; then
+  mkdir -p "${CONFIG_DIR}"
+  cp -f "${DEFAULT_CONFIG_PATH}" "${CONFIG_PATH}" || true
+fi
+
+GATEWAY_ARGS=(
+  --port "${GATEWAY_PORT}"
+  --bind "${GATEWAY_BIND}"
+)
+
+exec clawdbot gateway "${GATEWAY_ARGS[@]}"

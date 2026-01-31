@@ -20,7 +20,7 @@ ingress: true
 # Ingress port must match the gateway_port option (default: 18789)
 # If users change gateway_port in options, they should update this value accordingly
 # Note: config.yaml is static, so this cannot be dynamically set from options
-ingress_port: 18793
+ingress_port: 18789
 # Ports exposed to host network (for direct access, optional when using ingress)
 # These should match gateway_port and canvas_port options for consistency
 # Format: "HOST_PORT/tcp": CONTAINER_PORT

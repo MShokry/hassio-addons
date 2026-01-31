@@ -1,0 +1,24 @@
+{
+  "version": "1.0.1",
+  "release_date": "2026-01-31",
+  "release_notes": "ClawdBot Onboard Add-on – launches non-interactive onboarding to generate config, then starts the Gateway with ingress.",
+  "repository": "https://github.com/mshokry/hassio-addons",
+  "addon_url": "https://github.com/mshokry/hassio-addons/tree/main/clawdbot-onboard",
+  "update_available": false,
+  "latest_version": "1.0.1",
+  "features": [
+    "Onboarding UI – self-configures without preset options",
+    "Persisted config under /data/clawdbot-config",
+    "Gateway auto-start after onboarding",
+    "Ingress support to Gateway dashboard",
+    "Multi-arch builds (aarch64, amd64, armhf, armv7)"
+  ],
+  "supported_architectures": [
+    "aarch64",
+    "amd64",
+    "armhf",
+    "armv7"
+  ],
+  "maintainer": "Mahmoud Shokry <eng.m.shokry@gmail.com>",
+  "documentation": "https://github.com/mshokry/hassio-addons/blob/main/clawdbot-onboard/README.md"
+}

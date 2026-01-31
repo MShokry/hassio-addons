@@ -34,8 +34,10 @@ options:
   canvas_port: 18793
   bind_address: "0.0.0.0"
   force_onboard: false
+  onboarding_ui: true
 schema:
   gateway_port: "int"
   canvas_port: "int"
   bind_address: "str"
   force_onboard: "bool"
+  onboarding_ui: "bool"
